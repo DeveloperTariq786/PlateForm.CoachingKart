@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
+import { AppHeader } from "./AppHeader";
 import { cn } from "@/lib/utils";
 
 interface SidebarContextValue {
@@ -22,16 +23,17 @@ export function DashboardLayout() {
     <SidebarContext.Provider value={{ collapsed, setCollapsed }}>
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
-        <main
+        <div
           className={cn(
-            "flex-1 transition-all duration-300",
+            "flex flex-1 flex-col transition-all duration-300 min-w-0",
             collapsed ? "ml-[68px]" : "ml-[240px]"
           )}
         >
-          <div className="p-6 lg:p-8">
+          <AppHeader />
+          <main className="flex-1 p-6 lg:p-8">
             <Outlet />
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </SidebarContext.Provider>
   );
