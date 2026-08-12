@@ -6,7 +6,6 @@ import {
   Users,
   ChevronsLeft,
   ChevronsRight,
-  LogOut,
   Image,
   SlidersHorizontal,
   Megaphone,
@@ -18,7 +17,6 @@ import { cn } from "@/lib/utils";
 import { useSidebarState } from "./DashboardLayout";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/core/routes/paths";
-import useAuthStore from "@/modules/auth/store/auth.store";
 
 const navItems = [
   { title: "Dashboard", path: ROUTES.DASHBOARD, icon: LayoutDashboard },
@@ -36,8 +34,6 @@ export function AppSidebar() {
   const { collapsed, setCollapsed } = useSidebarState();
   const navigate = useNavigate();
   const location = useLocation();
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
 
   const isMediaActive = location.pathname.startsWith("/dashboard/media");
   const [mediaOpen, setMediaOpen] = useState(isMediaActive);
@@ -149,25 +145,8 @@ export function AppSidebar() {
         </div>
       </nav>
 
-      {/* User Info & Bottom Actions */}
-      <div className="mt-auto border-t border-sidebar-border p-3 space-y-1">
-        <div className={cn(
-          "mb-2 flex items-center gap-3 px-3 py-2",
-          collapsed ? "justify-center" : ""
-        )}>
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold shadow-sm">
-            {user?.name?.[0].toUpperCase() || "U"}
-          </div>
-          {!collapsed && (
-            <div className="flex flex-col overflow-hidden">
-              <span className="truncate text-sm font-semibold text-sidebar-primary-foreground">{user?.name}</span>
-              <span className="truncate text-[10px] text-sidebar-muted uppercase tracking-wider font-medium">
-                {user?.platformRole?.replace("PLATFORM_", "").replace("_", " ")}
-              </span>
-            </div>
-          )}
-        </div>
-
+      {/* Bottom Actions */}
+      <div className="mt-auto border-t border-sidebar-border p-3">
         <button
           data-testid="sidebar-collapse-btn"
           onClick={() => setCollapsed(!collapsed)}
@@ -181,18 +160,6 @@ export function AppSidebar() {
               <span>Collapse</span>
             </>
           )}
-        </button>
-
-        <button
-          data-testid="sidebar-logout-btn"
-          onClick={() => {
-            logout();
-            navigate(ROUTES.LOGIN);
-          }}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-500"
-        >
-          <LogOut className="h-5 w-5 shrink-0" />
-          {!collapsed && <span>Logout</span>}
         </button>
       </div>
     </aside>
