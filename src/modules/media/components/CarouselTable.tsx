@@ -3,10 +3,26 @@ import { Carousel } from "../types/carousel.types";
 import { normalizeImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface CarouselTableProps {
     data: Carousel[];
     isLoading?: boolean;
+    onEdit?: (carousel: Carousel) => void;
+    onDelete?: (id: string) => Promise<void>;
+    isDeleting?: boolean;
 }
 
 function CarouselTableSkeleton() {
@@ -15,7 +31,7 @@ function CarouselTableSkeleton() {
             <table className="w-full">
                 <thead>
                     <tr className="border-b border-border bg-muted/50">
-                        {["Image", "Title", "Description", "Button Text", "Institution", "Created At"].map((label, i) => (
+                        {["Image", "Title", "Description", "Button Text", "Institution", "Created At", "Actions"].map((label, i) => (
                             <th key={i} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                 {label}
                             </th>
@@ -43,6 +59,9 @@ function CarouselTableSkeleton() {
                             <td className="px-5 py-3.5">
                                 <Skeleton className="h-4 w-24" />
                             </td>
+                            <td className="px-5 py-3.5">
+                                <Skeleton className="h-8 w-16" />
+                            </td>
                         </tr>
                     ))}
                 </tbody>
@@ -51,7 +70,15 @@ function CarouselTableSkeleton() {
     );
 }
 
-export function CarouselTable({ data, isLoading }: CarouselTableProps) {
+export function CarouselTable({ data, isLoading, onEdit, onDelete, isDeleting = false }: CarouselTableProps) {
+    const [deletingCarousel, setDeletingCarousel] = useState<Carousel | null>(null);
+
+    const handleDeleteConfirm = async () => {
+        if (!deletingCarousel || !onDelete) return;
+        await onDelete(deletingCarousel.id);
+        setDeletingCarousel(null);
+    };
+
     const columns: TableColumn<Carousel>[] = [
         {
             key: "image",
@@ -95,7 +122,9 @@ export function CarouselTable({ data, isLoading }: CarouselTableProps) {
             key: "institution",
             label: "Institution",
             render: (_, row) => (
-                <p className="text-sm font-medium text-foreground">{row.institution.name}</p>
+                <p className="text-sm font-medium text-foreground">
+                    {row.institution?.name || "—"}
+                </p>
             ),
         },
         {
@@ -108,6 +137,40 @@ export function CarouselTable({ data, isLoading }: CarouselTableProps) {
             ),
         },
     ];
+
+    if (onEdit || onDelete) {
+        columns.push({
+            key: "id",
+            label: "Actions",
+            align: "right",
+            render: (_, row) => (
+                <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                    {onEdit && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={() => onEdit(row)}
+                            title="Edit Carousel"
+                        >
+                            <Pencil className="h-4 w-4" />
+                        </Button>
+                    )}
+                    {onDelete && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => setDeletingCarousel(row)}
+                            title="Delete Carousel"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
+            ),
+        });
+    }
 
     if (isLoading) {
         return <CarouselTableSkeleton />;
@@ -122,11 +185,34 @@ export function CarouselTable({ data, isLoading }: CarouselTableProps) {
     }
 
     return (
-        <DataTable<Carousel>
-            columns={columns}
-            data={data}
-            testId="carousel-table"
-            rowTestIdPrefix="carousel-row"
-        />
+        <>
+            <DataTable<Carousel>
+                columns={columns}
+                data={data}
+                testId="carousel-table"
+                rowTestIdPrefix="carousel-row"
+            />
+
+            <AlertDialog open={!!deletingCarousel} onOpenChange={(open) => !open && setDeletingCarousel(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Carousel Slide</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete carousel "{deletingCarousel?.title}"? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteConfirm}
+                            disabled={isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isDeleting ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 }

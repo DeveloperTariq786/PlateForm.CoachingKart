@@ -32,7 +32,7 @@ export function CarouselForm({ onSubmit, isLoading = false }: CarouselFormProps)
             title: formData.title,
             description: formData.description,
             buttonText: formData.buttonText,
-            institutionId: formData.institutionId,
+            institutionId: formData.institutionId || undefined,
             image: formData.image,
         });
     };
@@ -73,12 +73,12 @@ export function CarouselForm({ onSubmit, isLoading = false }: CarouselFormProps)
         },
         {
             id: "institutionId",
-            label: "Institution",
+            label: "Institution (Optional)",
             componentType: "select",
-            placeholder: institutionsLoading ? "Loading institutions..." : "Select an institution",
+            placeholder: institutionsLoading ? "Loading institutions..." : "Select an institution (optional)",
             value: formData.institutionId,
             onChange: (val) => setFormData({ ...formData, institutionId: val }),
-            required: true,
+            required: false,
             icon: Building2,
             colSpan: 2,
             disabled: institutionsLoading,
